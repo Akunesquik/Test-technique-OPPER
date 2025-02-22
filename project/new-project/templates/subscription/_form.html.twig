@@ -1,0 +1,8 @@
+{{ form_start(form) }}
+    {{ form_row(form.beginDate) }}
+    {{ form_row(form.endDate) }}
+    {{ form_row(form.contact) }}
+    {{ form_row(form.product) }}
+    {{ form_row(form._token) }}
+    <button class="btn">{{ button_label|default('Save') }}</button>
+{{ form_end(form) }}
