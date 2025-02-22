@@ -1,0 +1,56 @@
+body{
+    background-color: white!important;
+}
+
+table{
+    width: 100%;
+    max-width: 500px;
+}
+
+td{
+    text-align: center;
+}
+
+form div{
+    width: 100%;
+    max-width: 500px;
+    padding-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    align-items: center;
+
+}
+form div label{
+    padding: 10px;
+}
+form div input{
+    max-width: 200px;
+    padding: 10px;
+    min-width: 50px;
+
+}
+
+form div div label{
+    padding: 10px;
+}
+
+form div div input{
+    max-width: 200px;
+    padding: 10px;
+    min-width: 50px;
+
+}
+
+form div select{
+    max-width: 100px;
+    padding: 10px;
+    min-width: 50px;
+
+}
+
+button{
+    cursor: pointer;
+    padding: 10px 20px;
+    margin: 5px 0;
+}
