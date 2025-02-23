@@ -69,11 +69,12 @@ class Subscription
         return $this;
     }
 
-    public function setContact(Contact $contacts): static
+    public function setContact(?Contact $contacts): static
     {
         $this->contact->clear(); // Vide la collection actuelle
 
-        if (!$this->contact->contains($contacts)) {
+        // Si contacts n'est pas null, on l'ajoute à la collection
+        if ($contacts !== null && !$this->contact->contains($contacts)) {
             $this->contact->add($contacts);
         }
 
@@ -105,13 +106,18 @@ class Subscription
     }
 
 
-    public function setProduct(Product $product): static
+    public function setProduct(?Product $product): static
     {
         $this->product->clear(); // Vide la collection
-        $this->product->add($product); // Ajoute le produit donné
+
+        // Si le produit n'est pas null, on l'ajoute à la collection
+        if ($product !== null) {
+            $this->product->add($product);
+        }
 
         return $this;
     }
+
 
     public function getBeginDate(): ?\DateTimeInterface
     {

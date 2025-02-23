@@ -3,129 +3,164 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Subscription;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
-final class SubscriptionControllerTest extends WebTestCase
+class SubscriptionControllerTest extends WebTestCase
 {
-    private KernelBrowser $client;
-    private EntityManagerInterface $manager;
-    private EntityRepository $subscriptionRepository;
-    private string $path = '/subscription/';
-
-    protected function setUp(): void
+    public function testCreateSubscription(): void
     {
-        $this->client = static::createClient();
-        $this->manager = static::getContainer()->get('doctrine')->getManager();
-        $this->subscriptionRepository = $this->manager->getRepository(Subscription::class);
+        $client = static::createClient();
 
-        foreach ($this->subscriptionRepository->findAll() as $object) {
-            $this->manager->remove($object);
+        $data = [
+            'contact' => 1, // ID du contact
+            'product' => 1, // ID du produit
+            'beginDate' => '2025-02-23',
+            'endDate' => '2025-03-23'
+        ];
+        
+        $client->request('POST', '/subscription', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($data));
+        
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        
+        // Vérification si la réponse JSON contient bien ces données
+        $this->assertJson(json_encode([
+            '"contact":[{"id":1,"name":"John","firstname":"Doe"}]'
+        ]));
+        
+        
+    }
+
+    public function testCreateSubscriptionMissingData(): void
+    {
+        $client = static::createClient();
+
+        $data = [
+            'contact' => 1,
+            'product' => 1
+            // Données manquantes : beginDate, endDate
+        ];
+
+        $client->request('POST', '/subscription', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($data));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+        $this->assertJsonStringEqualsJsonString(
+            json_encode(['message' => 'Données manquantes.']),
+            $client->getResponse()->getContent()
+        );
+    }
+
+    public function testShowSubscription(): void
+    {
+        $client = static::createClient();
+
+        $id = 1;
+        $client->request('GET', "/subscription/{$id}");
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertJson(
+            json_encode([
+                'contact' => [
+                    ['id' => 1, 'name' => 'John', 'firstname' => 'Doe']
+                ]
+            ]),
+            $client->getResponse()->getContent()
+        );
+    }
+
+    public function testShowSubscriptionNotFound(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/subscription/9999');
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+        $this->assertJsonStringEqualsJsonString(
+            json_encode(['message' => 'Aucune souscription trouvée pour ce contact.']),
+            $client->getResponse()->getContent()
+        );
+    }
+
+    public function testEditSubscription(): void
+    {
+        $client = static::createClient();
+        $id = 19;
+    
+        $data = [
+            'contact' => 1, // ID du contact à mettre à jour
+            'product' => 2, // ID du produit à mettre à jour
+            'beginDate' => '2025-03-01',
+            'endDate' => '2025-04-01'
+        ];
+
+        $client->request('PUT', "/subscription/{$id}", [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($data));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertJson(
+            json_encode(json_encode([
+                'contact' => [
+                    ['id' => 1, 'name' => 'John', 'firstname' => 'Doe']
+                ]
+            ])),
+            $client->getResponse()->getContent()
+        );
+        $this->assertJson(
+            json_encode(json_encode([
+                'product' => [
+                    ['id' => 2, 'label' => 'Poires']
+                ]
+            ])),
+            $client->getResponse()->getContent()
+        );
+    }
+
+    public function testEditSubscriptionNotFound(): void
+    {
+        $client = static::createClient();
+
+        $data = [
+            'contact' => 2,
+            'product' => 2
+        ];
+
+        $client->request('PUT', '/subscription/9999', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($data));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+        $this->assertJsonStringEqualsJsonString(
+            json_encode(['message' => 'Souscription non trouvée.']),
+            $client->getResponse()->getContent()
+        );
+    }
+
+    public function testDeleteSubscription(): void
+    {
+        $client = static::createClient();
+
+        $entityManager = self::getContainer()->get('doctrine')->getManager();
+        $subscriptionRepository = $entityManager->getRepository(Subscription::class);
+
+        $subscription = $subscriptionRepository->findOneBy([], ['id' => 'DESC']); 
+
+        if ($subscription) {
+            $client->request('DELETE', '/subscription/' . $subscription->getId());
+            
+            $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        } else {
+            $this->fail('Aucune souscription trouvée pour supprimer');
         }
-
-        $this->manager->flush();
     }
 
-    public function testIndex(): void
+
+    public function testDeleteSubscriptionNotFound(): void
     {
-        $this->client->followRedirects();
-        $crawler = $this->client->request('GET', $this->path);
+        $client = static::createClient();
 
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('Subscription index');
+        $client->request('DELETE', '/subscription/9999');
 
-        // Use the $crawler to perform additional assertions e.g.
-        // self::assertSame('Some text on the page', $crawler->filter('.p')->first());
-    }
-
-    public function testNew(): void
-    {
-        $this->markTestIncomplete();
-        $this->client->request('GET', sprintf('%snew', $this->path));
-
-        self::assertResponseStatusCodeSame(200);
-
-        $this->client->submitForm('Save', [
-            'subscription[beginDate]' => 'Testing',
-            'subscription[endDate]' => 'Testing',
-            'subscription[contact]' => 'Testing',
-            'subscription[product]' => 'Testing',
-        ]);
-
-        self::assertResponseRedirects($this->path);
-
-        self::assertSame(1, $this->subscriptionRepository->count([]));
-    }
-
-    public function testShow(): void
-    {
-        $this->markTestIncomplete();
-        $fixture = new Subscription();
-        $fixture->setBeginDate('My Title');
-        $fixture->setEndDate('My Title');
-        $fixture->setContact('My Title');
-        $fixture->setProduct('My Title');
-
-        $this->manager->persist($fixture);
-        $this->manager->flush();
-
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-
-        self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('Subscription');
-
-        // Use assertions to check that the properties are properly displayed.
-    }
-
-    public function testEdit(): void
-    {
-        $this->markTestIncomplete();
-        $fixture = new Subscription();
-        $fixture->setBeginDate('Value');
-        $fixture->setEndDate('Value');
-        $fixture->setContact('Value');
-        $fixture->setProduct('Value');
-
-        $this->manager->persist($fixture);
-        $this->manager->flush();
-
-        $this->client->request('GET', sprintf('%s%s/edit', $this->path, $fixture->getId()));
-
-        $this->client->submitForm('Update', [
-            'subscription[beginDate]' => 'Something New',
-            'subscription[endDate]' => 'Something New',
-            'subscription[contact]' => 'Something New',
-            'subscription[product]' => 'Something New',
-        ]);
-
-        self::assertResponseRedirects('/subscription/');
-
-        $fixture = $this->subscriptionRepository->findAll();
-
-        self::assertSame('Something New', $fixture[0]->getBeginDate());
-        self::assertSame('Something New', $fixture[0]->getEndDate());
-        self::assertSame('Something New', $fixture[0]->getContact());
-        self::assertSame('Something New', $fixture[0]->getProduct());
-    }
-
-    public function testRemove(): void
-    {
-        $this->markTestIncomplete();
-        $fixture = new Subscription();
-        $fixture->setBeginDate('Value');
-        $fixture->setEndDate('Value');
-        $fixture->setContact('Value');
-        $fixture->setProduct('Value');
-
-        $this->manager->persist($fixture);
-        $this->manager->flush();
-
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-        $this->client->submitForm('Delete');
-
-        self::assertResponseRedirects('/subscription/');
-        self::assertSame(0, $this->subscriptionRepository->count([]));
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+        $this->assertJsonStringEqualsJsonString(
+            json_encode(['message' => 'Souscription non trouvée.']),
+            $client->getResponse()->getContent()
+        );
     }
 }
