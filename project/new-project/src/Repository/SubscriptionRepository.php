@@ -16,6 +16,16 @@ class SubscriptionRepository extends ServiceEntityRepository
         parent::__construct($registry, Subscription::class);
     }
 
+    public function findByContactId(int $contactId): array
+    {
+        return $this->createQueryBuilder('s')
+            ->innerJoin('s.contact', 'c')
+            ->where('c.id = :contactId')
+            ->setParameter('contactId', $contactId)
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Subscription[] Returns an array of Subscription objects
     //     */

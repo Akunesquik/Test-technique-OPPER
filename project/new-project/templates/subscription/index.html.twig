@@ -11,6 +11,8 @@
                 <th>Id</th>
                 <th>BeginDate</th>
                 <th>EndDate</th>
+                <th>Contact</th>
+                <th>Product</th>
                 <th>actions</th>
             </tr>
         </thead>
@@ -20,6 +22,25 @@
                 <td>{{ subscription.id }}</td>
                 <td>{{ subscription.beginDate ? subscription.beginDate|date('Y-m-d') : '' }}</td>
                 <td>{{ subscription.endDate ? subscription.endDate|date('Y-m-d') : '' }}</td>
+                <td>
+                    {% if subscription.contact is not empty %}
+                        {% for contact in subscription.contact %}
+                            {{ contact.name }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        Aucun contact
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if subscription.product is not empty %}
+                        {% for product in subscription.product %}
+                            {{ product.label }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        Aucun produit
+                    {% endif %}
+                </td>
                 <td>
                     <a href="{{ path('app_subscription_show', {'id': subscription.id}) }}">show</a>
                     <a href="{{ path('app_subscription_edit', {'id': subscription.id}) }}">edit</a>

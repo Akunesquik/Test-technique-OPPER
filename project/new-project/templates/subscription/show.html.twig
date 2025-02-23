@@ -19,6 +19,30 @@
                 <th>EndDate</th>
                 <td>{{ subscription.endDate ? subscription.endDate|date('Y-m-d') : '' }}</td>
             </tr>
+            <tr>
+                <th>Contacts</th>
+                <td>
+                    {% if subscription.contact is not empty %}
+                            {% for contact in subscription.contact %}
+                                <li>{{ contact.name }}</li>
+                            {% endfor %}
+                    {% else %}
+                        Aucun contact
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Produits</th>
+                <td>
+                    {% if subscription.product is not empty %}
+                            {% for product in subscription.product %}
+                                <li>{{ product.label }}</li>
+                            {% endfor %}
+                    {% else %}
+                        Aucun produit
+                    {% endif %}
+                </td>
+            </tr>
         </tbody>
     </table>
 

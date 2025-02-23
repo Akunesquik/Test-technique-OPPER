@@ -23,12 +23,12 @@ class SubscriptionType extends AbstractType
             ])
             ->add('contact', EntityType::class, [
                 'class' => Contact::class,
-                'choice_label' => 'id',
+                'choice_label' => 'name',
                 'multiple' => true,
             ])
             ->add('product', EntityType::class, [
                 'class' => Product::class,
-                'choice_label' => 'id',
+                'choice_label' => 'label',
                 'multiple' => true,
             ])
         ;

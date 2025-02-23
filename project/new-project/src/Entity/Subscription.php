@@ -69,6 +69,17 @@ class Subscription
         return $this;
     }
 
+    public function setContact(Contact $contacts): static
+    {
+        $this->contact->clear(); // Vide la collection actuelle
+
+        if (!$this->contact->contains($contacts)) {
+            $this->contact->add($contacts);
+        }
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Product>
      */
@@ -89,6 +100,15 @@ class Subscription
     public function removeProduct(Product $product): static
     {
         $this->product->removeElement($product);
+
+        return $this;
+    }
+
+
+    public function setProduct(Product $product): static
+    {
+        $this->product->clear(); // Vide la collection
+        $this->product->add($product); // Ajoute le produit donné
 
         return $this;
     }
