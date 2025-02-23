@@ -29,8 +29,6 @@ Installez maintenant les dépendances Symfony en exécutant :
 
 ``` composer install ```
 
-Le projet est installé !!
-
 
 ## Utilisation de l'API
 
