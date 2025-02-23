@@ -80,8 +80,13 @@ DELETE : http://localhost:9000/subscription/{idSubscription}
 GET : 127.0.0.1:9000/subscription/{idContact}
 ```
 
+## Tests
 
+Pour effectuer les tests réalisés :
 
+```
+symfony php vendor/bin/phpunit
+```
 
 
 
